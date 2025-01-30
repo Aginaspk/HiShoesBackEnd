@@ -1,9 +1,20 @@
+import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import express from "express";
 import mongoose from "mongoose";
+import authUser from "./routes/user/authUser.js"
 dotenv.config();
 
 const app = express();
+
+app.use(express.json())
+app.use(express.urlencoded({extended:true}))
+app.use(cookieParser())
+app.get('/',(req,res)=>{
+  res.json({message:"backend is running"})
+})
+
+app.use('/userAuth',authUser)
 
 mongoose
   .connect(process.env.MONGODB_URL)

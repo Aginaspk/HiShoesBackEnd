@@ -9,4 +9,4 @@ const userSchema = new mongoose.Schema({
   isBlocked: { type: Boolean, default: false },
 });
 
-module.exports = mongoose.model("user",userSchema);
+export default mongoose.model("user",userSchema)

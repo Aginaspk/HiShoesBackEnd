@@ -11,6 +11,11 @@ const verifyToken = (req,res,next)=>{
         if(!token){
             return next(new customError("Authentication token not provided", 403))
         }
+        jwt.verify(token,process.env.JWT_TOKEN,(err,decoded)=>{
+            if(err){
+
+            }
+        })
     }catch(err){
 
     }

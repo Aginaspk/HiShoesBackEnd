@@ -1,4 +1,4 @@
-const trycatch = (func) => async (req, resizeBy, next) => {
+const trycatch = (func) => async (req, res, next) => {
   try {
     await func(req, res, next);
   } catch (err) {
@@ -7,4 +7,4 @@ const trycatch = (func) => async (req, resizeBy, next) => {
   }
 };
 
-module.exports = trycatch;
+export default trycatch;
