@@ -1,4 +1,4 @@
-import cart from "../../models/schema/cartSchema";
+import cart from "../../models/schema/cartSchema.js";
 
 const getUserCart = async (req, res) => {
   const cartItems = await cart.findOne({ userId: req.user.id }).populate({
@@ -68,4 +68,4 @@ const removeFromCart = async (req, res) => {
   }
 };
 
-module.exports = { getUserCart, updateUserCart, removeFromCart };
+export { getUserCart, updateUserCart, removeFromCart };
