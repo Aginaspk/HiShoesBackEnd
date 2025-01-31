@@ -10,6 +10,8 @@ import {
   removeFromCart,
 } from "../../controllers/user/cartController.js";
 import { verifyToken } from "../../middleware/authentication.js";
+import { addToWishlist, getUserWishlist, removeFromWishlist } from "../../controllers/user/userWishlistController.js";
+import { cancelOrderById, getAllOrders, orderCOD } from "../../controllers/user/userOrderController.js";
 
 const routes = express.Router();
 
@@ -22,6 +24,19 @@ routes
   // cart
   .get("/cart", verifyToken, trycatch(getUserCart))
   .post("/cart", verifyToken, trycatch(updateUserCart))
-  .delete("/cart", verifyToken, trycatch(removeFromCart));
+  .delete("/cart", verifyToken, trycatch(removeFromCart))
 
+  // wishlist
+  .get('/wishlist',verifyToken,trycatch(getUserWishlist))
+  .post('/wishlist',verifyToken,trycatch(addToWishlist))
+  .delete('/wishlist',verifyToken,trycatch(removeFromWishlist))
+
+
+  // Order
+  .get('/order',verifyToken,trycatch(getAllOrders))
+  .post('order/cod',verifyToken,trycatch(orderCOD))
+  .patch('/order/cancel/:id',verifyToken,trycatch(cancelOrderById))
+
+
+  
 export default routes;
