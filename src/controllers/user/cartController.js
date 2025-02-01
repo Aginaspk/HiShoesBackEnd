@@ -8,7 +8,7 @@ const getUserCart = async (req, res) => {
   if (cartItems) {
     res.status(200).json({
       status: "success",
-      data,
+      cartItems,
     });
   } else {
     res.status(200).json({
@@ -52,12 +52,13 @@ const updateUserCart = async (req, res) => {
 };
 
 const removeFromCart = async (req, res) => {
-  const cartItem = await cart.findOne(
+  const { id } = req.params;
+  const cartItem = await cart.findOneAndUpdate(
     {
       userId: req.user.id,
-      "products.productId": req.body.productId,
+      "products.productId": id,
     },
-    { $pull: { products: { productId: req.body.productId } } },
+    { $pull: { products: { productId: id } } },
     { new: true }
   );
 

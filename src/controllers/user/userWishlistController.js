@@ -29,11 +29,26 @@ const addToWishlist = async (req, res, next) => {
     let wishlist = await wishListSchema.findOne({ userId: req.user.id });
     if (!wishlist) {
       wishlist = new wishListSchema({
-        userId: req.body.id,
-        products: [productId],
+        userId: req.user.id,
+        products: [{ productId }],
       });
-    } else if (!wishlist.products.includes(productId)) {
-      wishlist.products.push(productId);
+    }
+    // else if (!wishlist.products.includes(productId)) {
+    //   wishlist.products.push(productId);
+    // }
+    else {
+      const productExists = wishlist.products.some(
+        (product) => product.productId.toString() === productId
+      );
+
+      if (!productExists) {
+        wishlist.products.push({ productId }); 
+      } else {
+        return res.status(200).json({
+          message: "Product is already in the wishlist",
+          wishlist,
+        });
+      }
     }
 
     await wishlist.save();
@@ -43,18 +58,23 @@ const addToWishlist = async (req, res, next) => {
       wishlist,
     });
   } catch (error) {
+    console.log(error);
+
     next(new CustomError("failed to add products to wishlist", 500));
   }
 };
 
 const removeFromWishlist = async (req, res, next) => {
-  const { productId } = req.body;
-  if (!productId) {
+  const {id} = req.params;
+  if (!id) {
     return next(new CustomError("product is required", 400));
   }
   const newWishlist = await wishListSchema.findOneAndUpdate(
-    { userId: req.user.id },
-    { $pull: { productId: productId } },
+    {
+      userId: req.user.id,
+      "products.productId": id,
+    },
+    { $pull: { products: { productId: id } } },
     { new: true }
   );
   if (newWishlist) {
@@ -64,4 +84,4 @@ const removeFromWishlist = async (req, res, next) => {
   }
 };
 
-export {getUserWishlist,removeFromWishlist,addToWishlist};
+export { getUserWishlist, removeFromWishlist, addToWishlist };

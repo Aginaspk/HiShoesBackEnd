@@ -10,6 +10,7 @@ const orderCOD = async (req, res, next) => {
     ...req.body,
     userId: req.user.id,
   }).populate("products.productId", "name price images");
+  console.log(req.body)
 
   if (!newOrder) {
     return next(new CustomError("order not created", 400));
@@ -34,7 +35,7 @@ const orderCOD = async (req, res, next) => {
     await currentUserCart.save();
   }
   await newOrder.save();
-  res.status(201).json({ message: "order placed succesfully" });
+  res.status(201).json({ message: "order placed succesfully",order:newOrder });
 };
 
 const getAllOrders = async (req, res, next) => {

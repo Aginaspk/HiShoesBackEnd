@@ -24,17 +24,17 @@ routes
   // cart
   .get("/cart", verifyToken, trycatch(getUserCart))
   .post("/cart", verifyToken, trycatch(updateUserCart))
-  .delete("/cart", verifyToken, trycatch(removeFromCart))
+  .delete("/cart/:id", verifyToken, trycatch(removeFromCart))
 
   // wishlist
   .get('/wishlist',verifyToken,trycatch(getUserWishlist))
   .post('/wishlist',verifyToken,trycatch(addToWishlist))
-  .delete('/wishlist',verifyToken,trycatch(removeFromWishlist))
+  .delete('/wishlist/:id',verifyToken,trycatch(removeFromWishlist))
 
 
   // Order
   .get('/order',verifyToken,trycatch(getAllOrders))
-  .post('order/cod',verifyToken,trycatch(orderCOD))
+  .post('/order/cod',verifyToken,trycatch(orderCOD))
   .patch('/order/cancel/:id',verifyToken,trycatch(cancelOrderById))
 
 
