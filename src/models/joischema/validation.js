@@ -5,7 +5,9 @@ const joiUserSchema = joi.object({
   email: joi.string().email().required(),
   password: joi
     .string()
-    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)
+    .pattern(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
+    )
     .required()
     .messages({
       "string.pattern.base":
@@ -18,4 +20,17 @@ const joiUserLogin = joi.object({
   password: joi.string().required(),
 });
 
-export  { joiUserLogin, joiUserSchema };
+const joiProductSchema = joi.object({
+  name: joi.string().trim().required(),
+  description: joi.string().trim().required(),
+  price: joi.number().required(),
+  sale: joi.number().required(),
+  brand: joi.string().trim().required(),
+  sizes: joi.array().items(joi.number().required()).required(),
+  gender: joi.string().trim().required(), // Corrected "trm" to "trim"
+  sold: joi.number().required(),
+  isDeleted:joi.boolean().default(false).optional(),
+
+});
+
+export { joiUserLogin, joiUserSchema, joiProductSchema };
