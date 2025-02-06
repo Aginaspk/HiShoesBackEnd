@@ -4,9 +4,12 @@ import express from "express";
 import mongoose from "mongoose";
 import authUser from "./routes/user/authUser.js"
 import userRoute from './routes/user/userRoutes.js'
+import connectCloudinary from "./config/cloudinary.js";
+const app = express();
 dotenv.config();
 
-const app = express();
+connectCloudinary();
+
 
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))

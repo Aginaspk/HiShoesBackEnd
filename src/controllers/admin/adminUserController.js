@@ -19,4 +19,17 @@ const getUserById = async (req, res, next) => {
   res.status(200).json({ user });
 };
 
+const blockUser = async (req, res, next) => {
+  const user = await userSchema.findOne(req.params.id);
+  if (!user) {
+    return next(new CustomError("User not Found", 404));
+  }
+  user.isBlocked = !user.isBlocked;
+  await user.save();
+  res.status(200).json({
+    message: user.isBlocked ? "user blocked" : "user unblocked",
+  });
+};
 
+
+export {getAllUsers,getUserById,blockUser}
