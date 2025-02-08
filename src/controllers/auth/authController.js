@@ -94,7 +94,7 @@ const userLogin = async (req, res, next) => {
 };
 
 const adminLogin = async (req, res, next) => {
-  const { value, error } = joiSchema.joiUserLogin.validate(req.body);
+  const { value, error } = joiUserLogin.validate(req.body);
   if (error) {
     return res.status(400).json({
       status: "error",
@@ -115,12 +115,12 @@ const adminLogin = async (req, res, next) => {
   const token = createToken(adminData._id, adminData.isAdmin);
   const refreshtoken = createRefreshtoken(adminData._id, adminData.isAdmin);
 
-  res.cookies("refreshtoken", refreshtoken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "none",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+  // res.cookies("refreshtoken", refreshtoken, {
+  //   httpOnly: true,
+  //   secure: true,
+  //   sameSite: "none",
+  //   maxAge: 7 * 24 * 60 * 60 * 1000,
+  // });
   res.status(200).json({
     message: "admin loggedIn successfully",
     token,

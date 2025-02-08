@@ -8,7 +8,7 @@ const productSchema = new mongoose.Schema({
   images: [{ type: String, required: true, trim: true }],
   brand: { type: String, required: true, trim: true },
   sizes: [{ type: Number, required: true }],
-  gender: { type: String, required: true, trm: true },
+  gender: { type: String, required: true, trim: true },
   sold: { type: Number, required: true },
   isDeleted: { type: Boolean, default: false },
 });

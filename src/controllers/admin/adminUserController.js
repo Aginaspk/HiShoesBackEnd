@@ -1,8 +1,8 @@
-import userSchema from "../../models/schema/userSchema";
-import CustomError from "../../utils/customError";
+import userSchema from "../../models/schema/userSchema.js";
+import CustomError from "../../utils/customError.js";
 
 const getAllUsers = async (req, res, next) => {
-  const users = await userSchema.find({ isAdmin: false }).select(-password);
+  const users = await userSchema.find({ isAdmin: false }).select("-password");
   if (!users) {
     return next(new CustomError("users not found", 404));
   }
@@ -12,7 +12,7 @@ const getAllUsers = async (req, res, next) => {
 };
 
 const getUserById = async (req, res, next) => {
-  const user = await userSchema.findOne(req.params.id).select(-password);
+  const user = await userSchema.findOne({_id:req.params.id}).select("-password");
   if (!user) {
     return next(new CustomError("user not found", 404));
   }
@@ -20,7 +20,7 @@ const getUserById = async (req, res, next) => {
 };
 
 const blockUser = async (req, res, next) => {
-  const user = await userSchema.findOne(req.params.id);
+  const user = await userSchema.findOne({_id:req.params.id});
   if (!user) {
     return next(new CustomError("User not Found", 404));
   }

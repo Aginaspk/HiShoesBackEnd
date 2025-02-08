@@ -1,6 +1,6 @@
 import express from "express";
-import trycatch from "../../middleware/trycatch";
-import { adminLogin } from "../../controllers/auth/authController";
+import trycatch from "../../middleware/trycatch.js";
+import { adminLogin } from "../../controllers/auth/authController.js";
 
 const routes = express.Router();
 

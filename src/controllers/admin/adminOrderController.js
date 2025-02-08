@@ -1,5 +1,5 @@
-import orderShema from "../../models/schema/orderShema";
-import CustomError from "../../utils/customError";
+import orderShema from "../../models/schema/orderShema.js";
+import CustomError from "../../utils/customError.js";
 
 const getAllOrders = async (req, res, next) => {
   const orders = await orderShema

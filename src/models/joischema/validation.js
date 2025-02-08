@@ -26,7 +26,7 @@ const joiProductSchema = joi.object({
   price: joi.number().required(),
   sale: joi.number().required(),
   brand: joi.string().trim().required(),
-  sizes: joi.array().items(joi.number().required()).required(),
+  sizes: joi.string().trim().required(),
   gender: joi.string().trim().required(), // Corrected "trm" to "trim"
   sold: joi.number().required(),
   isDeleted:joi.boolean().default(false).optional(),

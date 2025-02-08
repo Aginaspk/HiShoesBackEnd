@@ -5,7 +5,8 @@ import mongoose from "mongoose";
 import authUser from "./routes/user/authUser.js";
 import userRoute from "./routes/user/userRoutes.js";
 import connectCloudinary from "./config/cloudinary.js";
-import adminRoute from "./routes/admin/authAdmin.js";
+import authAdmin from "./routes/admin/authAdmin.js";
+import adminRoute from "./routes/admin/adminRoutes.js"
 import manageError from "./middleware/manageError.js";
 const app = express();
 dotenv.config();
@@ -20,8 +21,10 @@ app.get("/", (req, res) => {
 });
 
 app.use("/userAuth", authUser);
-app.use("/admin", adminRoute);
+app.use("/adminAuth", authAdmin);
 app.use("/user", userRoute);
+app.use('/admin',adminRoute)
+
 
 app.all("*", (req, res) => {
   res.status(404).json({

@@ -1,6 +1,6 @@
-import productSchema from "../../models/schema/productSchema";
-import CustomError from "../../utils/customError";
-import { joiProductSchema } from "../../models/joischema/validation";
+import productSchema from "../../models/schema/productSchema.js";
+import CustomError from "../../utils/customError.js";
+import { joiProductSchema } from "../../models/joischema/validation.js";
 
 const createProduct = async (req, res, next) => {
   const { value, error } = joiProductSchema.validate(req.body);
@@ -12,8 +12,13 @@ const createProduct = async (req, res, next) => {
   }
   const imagePaths = req.files.map((file) => file.path);
 
-  const newProduct = new product({
+  const sizesArray = Array.isArray(req.body.sizes)
+      ? req.body.sizes.map(Number)
+      : req.body.sizes.split(",").map(Number);
+
+  const newProduct = new productSchema({
     ...value,
+    sizes:sizesArray,
     images: imagePaths,
   });
   if (!newProduct) {
@@ -25,8 +30,13 @@ const createProduct = async (req, res, next) => {
   });
 };
 
+
+
+
+
+
 const updateProduct = async (req, res, next) => {
-  const existingProduct = await productSchema.findById(req.params.id);
+  const existingProduct = await productSchema.findById({_id:req.params.id});
   if (!existingProduct) {
     return next(new CustomError("Product not found", 404));
   }
@@ -36,8 +46,13 @@ const updateProduct = async (req, res, next) => {
     images = req.files.map((file) => file.path);
   }
 
+  const sizesArray = Array.isArray(req.body.sizes)
+  ? req.body.sizes.map(Number)
+  : req.body.sizes.split(",").map(Number);
+
   existingProduct.set({
     ...req.body,
+    sizes:sizesArray,
     images: images,
   });
 
@@ -63,7 +78,7 @@ const deleteProduct = async (req, res, next) => {
 };
 
 const getAllProducts = async (req, res, next) => {
-  const products = await productSchema.find({ isDeleted: false });
+  const products = await productSchema.find();
   if (!products) {
     return next(new CustomError("Products not found"));
   }
@@ -74,7 +89,7 @@ const getAllProducts = async (req, res, next) => {
 };
 
 const getProductById = async (req, res, next) => {
-  const product = await productSchema.findOne(req.params.id);
+  const product = await productSchema.findOne({_id:req.params.id});
   if (!product) {
     return next(new CustomError("Product not found", 404));
   }
