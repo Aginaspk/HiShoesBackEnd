@@ -1,8 +1,8 @@
+import Stripe from "stripe";
 import orderShema from "../../models/schema/orderShema.js";
 import cartSchema from "../../models/schema/cartSchema.js";
 import CustomError from "../../utils/customError.js";
 import mongoose from "mongoose";
-import Stripe from "stripe";
 import productSchema from "../../models/schema/productSchema.js";
 
 const orderCOD = async (req, res, next) => {
@@ -10,7 +10,7 @@ const orderCOD = async (req, res, next) => {
     ...req.body,
     userId: req.user.id,
   }).populate("products.productId", "name price images");
-  console.log(req.body)
+  console.log(req.body);
 
   if (!newOrder) {
     return next(new CustomError("order not created", 400));
@@ -35,7 +35,86 @@ const orderCOD = async (req, res, next) => {
     await currentUserCart.save();
   }
   await newOrder.save();
-  res.status(201).json({ message: "order placed succesfully",order:newOrder });
+  res
+    .status(201)
+    .json({ message: "order placed succesfully", order: newOrder });
+};
+
+const orderWithStripe = async (req, res, next) => {
+  const { products, totalAmount } = req.body;
+  if (!products || products.length === 0) {
+    return next(new CustomError("No products found", 404));
+  }
+  const productDetails = await Promise.all(
+    products.map(async (item) => {
+      const product = await productSchema.findById(item.productId);
+      if (!product) {
+        return next(new CustomError("product not found", 404));
+      }
+      return {
+        name: product.name,
+        price: product.price,
+        images: product.images,
+        quantity: item.quantity,
+      };
+    })
+  );
+  const newTotal = Math.round(totalAmount);
+
+  const lineItem = productDetails.map((item) => ({
+    price_data: {
+      currency: "inr",
+      product_data: {
+        name: item.name,
+        images: item.images,
+      },
+      unit_amount: Math.round(item.price * 100),
+    },
+    quantity: item.quantity,
+  }));
+
+  const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY);
+  const session = await stripeClient.checkout.sessions.create({
+    payment_method_types: ["card"],
+    line_items: lineItem,
+    mode: "payment",
+    success_url: `http://localhost:3000/success/{CHECKOUT_SESSION_ID}`,
+    cancel_url: `http://localhost:3000/cancel`,
+  });
+  const newOrder = new orderShema({
+    userId: req.user.id,
+    products,
+    totalAmount: newTotal,
+    paymentStatus: "pending",
+    shippingStatus: "processing",
+    paymentMethod: "stripe",
+    sessionId: session.id,
+  });
+  await newOrder.save();
+
+  res.status(200).json({
+    message: "order placed succesfully",
+    sessionId: session.id,
+    stripeURL: session.url,
+  });
+};
+
+const stripeSuccess = async (req, res, next) => {
+  const sessionId = req.params.sessionId;
+  const order = await orderShema.findOne({ sessionId: sessionId });
+  if (!order) return next(new CustomError("order not found", 404));
+  order.paymentStatus = "paid";
+  order.shippingStatus = "processing";
+  await order.save();
+
+  await cartSchema.findOneAndUpdate(
+    { userId: order.userId },
+    { $set: { products: [] } }
+  );
+
+  res.status(200).json({
+    message: "payment succesfull",
+  });
 };
 
 const getAllOrders = async (req, res, next) => {
@@ -78,6 +157,4 @@ const cancelOrderById = async (req, res, next) => {
   });
 };
 
-
-
-export {orderCOD,getAllOrders,cancelOrderById};
+export { orderCOD, getAllOrders, cancelOrderById, orderWithStripe,stripeSuccess };

@@ -20,6 +20,9 @@ const orderSchema = new mongoose.Schema(
         },
       },
     ],
+    sessionId:{
+      type:String
+    },
     purchaseDate: {
       type: Date,
       default: Date.now,

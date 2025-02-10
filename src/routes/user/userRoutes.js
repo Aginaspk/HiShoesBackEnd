@@ -11,7 +11,7 @@ import {
 } from "../../controllers/user/cartController.js";
 import { verifyToken } from "../../middleware/authentication.js";
 import { addToWishlist, getUserWishlist, removeFromWishlist } from "../../controllers/user/userWishlistController.js";
-import { cancelOrderById, getAllOrders, orderCOD } from "../../controllers/user/userOrderController.js";
+import { cancelOrderById, getAllOrders, orderCOD, orderWithStripe, stripeSuccess } from "../../controllers/user/userOrderController.js";
 
 const routes = express.Router();
 
@@ -35,6 +35,8 @@ routes
   // Order
   .get('/order',verifyToken,trycatch(getAllOrders))
   .post('/order/cod',verifyToken,trycatch(orderCOD))
+  .post('/order/stripe/checkout',verifyToken,trycatch(orderWithStripe))
+  .patch('/order/stripe/success/:sessionId',verifyToken,trycatch(stripeSuccess))
   .patch('/order/cancel/:id',verifyToken,trycatch(cancelOrderById))
 
 

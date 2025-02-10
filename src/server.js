@@ -6,12 +6,20 @@ import authUser from "./routes/user/authUser.js";
 import userRoute from "./routes/user/userRoutes.js";
 import connectCloudinary from "./config/cloudinary.js";
 import authAdmin from "./routes/admin/authAdmin.js";
-import adminRoute from "./routes/admin/adminRoutes.js"
+import adminRoute from "./routes/admin/adminRoutes.js";
 import manageError from "./middleware/manageError.js";
+import cors from "cors";
 const app = express();
 dotenv.config();
 
 connectCloudinary();
+
+app.use(
+  cors({
+    origin: process.env.FRONT_END_URL,
+    Credential: true,
+  })
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -23,8 +31,7 @@ app.get("/", (req, res) => {
 app.use("/userAuth", authUser);
 app.use("/adminAuth", authAdmin);
 app.use("/user", userRoute);
-app.use('/admin',adminRoute)
-
+app.use("/admin", adminRoute);
 
 app.all("*", (req, res) => {
   res.status(404).json({
