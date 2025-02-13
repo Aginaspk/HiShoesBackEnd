@@ -16,8 +16,8 @@ connectCloudinary();
 
 app.use(
   cors({
-    origin: process.env.FRONT_END_URL,
-    Credential: true,
+    origin: "http://localhost:5173",
+    credentials: true,
   })
 );
 

@@ -2,7 +2,10 @@ import express from "express";
 import trycatch from "../../middleware/trycatch.js";
 import {
   getAllProducts,
+  getMostSelling,
+  getNewProducts,
   getProductsById,
+  getProductsWithCategory,
 } from "../../controllers/user/userProductController.js";
 import {
   updateUserCart,
@@ -20,6 +23,9 @@ routes
   // product
   .get("/products", trycatch(getAllProducts))
   .get("/product/:id", trycatch(getProductsById))
+  .get('/products/mostSelling',trycatch(getMostSelling))
+  .get('/products/new',trycatch(getNewProducts))
+  .get('/products/:category',trycatch(getProductsWithCategory))
 
   // cart
   .get("/cart", verifyToken, trycatch(getUserCart))

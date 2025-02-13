@@ -1,17 +1,47 @@
 import user from "../../models/schema/userSchema.js";
-import { joiUserLogin, joiUserSchema } from "../../models/joischema/validation.js";
+import {
+  joiUserLogin,
+  joiUserSchema,
+} from "../../models/joischema/validation.js";
 import bycrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import customError from "../../utils/customError.js";
 
-const createToken = (id, isAdmin) => {
-  return jwt.sign({ id, isAdmin }, process.env.JWT_TOKEN, {
+// const createToken = (id, isAdmin) => {
+//   return jwt.sign({ id, isAdmin }, process.env.JWT_TOKEN, {
+//     expiresIn: "7d",
+//   });
+// };
+
+// const createRefreshtoken = (id, isAdmin) => {
+//   return jwt.sign({ id, isAdmin }, process.env.JWT_TOKEN, {
+//     expiresIn: "14d",
+//   });
+// };
+
+const createAdminToken = (id) => {
+  return jwt.sign({ id, isAdmin: true }, process.env.JWT_TOEKN_ADMIN, {
     expiresIn: "7d",
   });
 };
 
-const createRefreshtoken = (id, isAdmin) => {
-  return jwt.sign({ id, isAdmin }, process.env.JWT_TOKEN, {
+// Function to create a User token
+const createUserToken = (id) => {
+  return jwt.sign({ id, isAdmin: false }, process.env.JWT_TOKEN_USER, {
+    expiresIn: "7d",
+  });
+};
+
+// Function to create Admin Refresh Token
+const createAdminRefreshToken = (id) => {
+  return jwt.sign({ id, isAdmin: true }, process.env.JWT_TOEKN_ADMIN, {
+    expiresIn: "14d",
+  });
+};
+
+// Function to create User Refresh Token
+const createUserRefreshToken = (id) => {
+  return jwt.sign({ id, isAdmin: false }, process.env.JWT_TOKEN_USER, {
     expiresIn: "14d",
   });
 };
@@ -76,8 +106,8 @@ const userLogin = async (req, res, next) => {
     return next(new customError("password is incorrect", 401));
   }
 
-  const token = createToken(userData._id, userData.isAdmin);
-  const refreshtoken = createRefreshtoken(userData._id, userData.isAdmin);
+  const token = createUserToken(userData._id);
+  const refreshtoken = createUserRefreshToken(userData._id);
 
   res.cookie("refreshtoken", refreshtoken, {
     httpOnly: true,
@@ -112,8 +142,8 @@ const adminLogin = async (req, res, next) => {
   if (!isMatch) {
     return next(new customError("password is incorrect", 401));
   }
-  const token = createToken(adminData._id, adminData.isAdmin);
-  const refreshtoken = createRefreshtoken(adminData._id, adminData.isAdmin);
+  const token = createUserToken(adminData._id);
+  const refreshtoken = createUserRefreshToken(adminData._id);
 
   // res.cookies("refreshtoken", refreshtoken, {
   //   httpOnly: true,
