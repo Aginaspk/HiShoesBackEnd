@@ -109,16 +109,23 @@ const userLogin = async (req, res, next) => {
   const token = createUserToken(userData._id);
   const refreshtoken = createUserRefreshToken(userData._id);
 
-  res.cookie("refreshtoken", refreshtoken, {
+  res.cookie("token", token, {
     httpOnly: true,
-    secure: true,
+    secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
+  res.cookie("refreshToken", refreshtoken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
   res.status(200).json({
     status: "used logged in successfully",
     isAdmin: userData.isAdmin,
+    refreshtoken,
     token,
   });
 };
@@ -158,14 +165,24 @@ const adminLogin = async (req, res, next) => {
 };
 
 const userLogout = async (req, res, next) => {
-  res.clearCookie("refreshtoken", {
-    httpOnly: true,
-    secure: false,
-    sameSite: "none",
-  });
-  res.status(200).json({
-    message: "loggedout succesfully",
-  });
+  try {
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    });
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    });
+
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    next(error);
+  }
 };
+
 
 export { userReg, userLogin, adminLogin, userLogout };

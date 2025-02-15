@@ -26,31 +26,51 @@ import customError from "../utils/customError.js";
 // };
 
 
+// const verifyToken = (req, res, next) => {
+//   try {
+//     const authHeader = req.headers.authorization || req.headers.Authorization;
+
+//     if (!authHeader || !authHeader.startsWith("Bearer ")) {
+//       return next(new customError("Authentication token missing", 401));
+//     }
+
+//     const token = authHeader.split(" ")[1];
+
+//     jwt.verify(token, process.env.JWT_TOKEN, (err, decoded) => {
+//       if (err) {
+//         console.log("JWT verification error:", err.message);
+//         return next(new customError("Invalid or expired token", 403));
+//       }
+//       req.user = decoded;
+//       next();
+//     });
+//   } catch (error) {
+//     console.log("Token verification error:", error.message);
+//     next(new customError("Failed to verify token", 500));
+//   }
+// };
+
 const verifyToken = (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization || req.headers.Authorization;
+    const token = req.cookies?.token; 
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!token) {
       return next(new customError("Authentication token missing", 401));
     }
 
-    const token = authHeader.split(" ")[1];
-
-    jwt.verify(token, process.env.JWT_TOKEN, (err, decoded) => {
+    jwt.verify(token, process.env.JWT_TOKEN_USER, (err, decoded) => {
       if (err) {
-        console.log("JWT verification error:", err.message);
+        console.error("JWT verification error:", err.message);
         return next(new customError("Invalid or expired token", 403));
       }
       req.user = decoded;
       next();
     });
   } catch (error) {
-    console.log("Token verification error:", error.message);
+    console.error("Token verification error:", error.message);
     next(new customError("Failed to verify token", 500));
   }
 };
-
-
 
 
 const veridyAdminToken = (req, res, next) => {

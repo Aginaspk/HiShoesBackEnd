@@ -21,23 +21,23 @@ const getUserCart = async (req, res) => {
 };
 
 const updateUserCart = async (req, res) => {
-  const { productId, quantity } = req.body;
+  const { productId, quantity, size } = req.body;
 
   let cartItems = await cart.findOne({ userId: req.user.id });
 
   if (!cartItems) {
     cartItems = new cart({
       userId: req.user.id,
-      products: [{ productId, quantity }],
+      products: [{ productId, quantity,size }],
     });
   } else {
     const productIndex = cartItems.products.findIndex(
-      (product) => product.productId.toString() === productId.toString()
+      (product) => product.productId.toString() === productId.toString() && product.size === size
     );
     if (productIndex > -1) {
       cartItems.products[productIndex].quantity += quantity;
     } else {
-      cartItems.products.push({ productId, quantity });
+      cartItems.products.push({ productId, quantity,size });
     }
   }
   const cartItemsSaved = await cartItems.save();
