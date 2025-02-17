@@ -2,9 +2,10 @@ import wishListSchema from "../../models/schema/wishListSchema.js";
 import CustomError from "../../utils/customError.js";
 
 const getUserWishlist = async (req, res) => {
-  const data = await wishListSchema
-    .findOne({ userId: req.user.id })
-    .populate("products");
+  const data = await wishListSchema.findOne({ userId: req.user.id }).populate({
+    path: "products.productId",
+    select: "name price images",
+  });
 
   if (data) {
     return res.status(200).json({
@@ -42,7 +43,7 @@ const addToWishlist = async (req, res, next) => {
       );
 
       if (!productExists) {
-        wishlist.products.push({ productId }); 
+        wishlist.products.push({ productId });
       } else {
         return res.status(200).json({
           message: "Product is already in the wishlist",
@@ -65,7 +66,7 @@ const addToWishlist = async (req, res, next) => {
 };
 
 const removeFromWishlist = async (req, res, next) => {
-  const {id} = req.params;
+  const { id } = req.params;
   if (!id) {
     return next(new CustomError("product is required", 400));
   }

@@ -20,6 +20,37 @@ const getUserCart = async (req, res) => {
   }
 };
 
+// const updateUserCart = async (req, res) => {
+//   const { productId, quantity, size } = req.body;
+
+//   let cartItems = await cart.findOne({ userId: req.user.id });
+
+//   if (!cartItems) {
+//     cartItems = new cart({
+//       userId: req.user.id,
+//       products: [{ productId, quantity,size }],
+//     });
+//   } else {
+//     const productIndex = cartItems.products.findIndex(
+//       (product) => product.productId.toString() === productId.toString() && product.size === size
+//     );
+//     if (productIndex > -1) {
+//       cartItems.products[productIndex].quantity += quantity;
+//     } else {
+//       cartItems.products.push({ productId, quantity,size });
+//     }
+//   }
+//   const cartItemsSaved = await cartItems.save();
+//   await cartItemsSaved.populate({
+//     path: "products.productId",
+//     select: "name price images",
+//   });
+
+//   res.status(200).json({
+//     message: "cart updated",
+//   });
+// };
+
 const updateUserCart = async (req, res) => {
   const { productId, quantity, size } = req.body;
 
@@ -28,26 +59,42 @@ const updateUserCart = async (req, res) => {
   if (!cartItems) {
     cartItems = new cart({
       userId: req.user.id,
-      products: [{ productId, quantity,size }],
+      products: [{ productId, quantity, size }],
     });
   } else {
     const productIndex = cartItems.products.findIndex(
-      (product) => product.productId.toString() === productId.toString() && product.size === size
+      (product) =>
+        product.productId.toString() === productId.toString() &&
+        product.size === size
     );
     if (productIndex > -1) {
       cartItems.products[productIndex].quantity += quantity;
     } else {
-      cartItems.products.push({ productId, quantity,size });
+      cartItems.products.push({ productId, quantity, size });
     }
   }
-  const cartItemsSaved = await cartItems.save();
-  await cartItemsSaved.populate({
+
+  await cartItems.populate({
     path: "products.productId",
     select: "name price images",
   });
 
+  let grandTotal = 0;
+
+  cartItems.products.forEach((item) => {
+    const productTotalPrice = item.productId.price * item.quantity;
+
+    item.totalPrice = productTotalPrice;
+
+    grandTotal += productTotalPrice;
+  });
+
+  cartItems.totalPrice = grandTotal;
+
+  const cartItemsSaved = await cartItems.save();
+
   res.status(200).json({
-    message: "cart updated",
+    message: "Cart updated",
   });
 };
 
@@ -56,9 +103,8 @@ const removeFromCart = async (req, res) => {
   const cartItem = await cart.findOneAndUpdate(
     {
       userId: req.user.id,
-      "products.productId": id,
     },
-    { $pull: { products: { productId: id } } },
+    { $pull: { products: { _id: id } } },
     { new: true }
   );
 
