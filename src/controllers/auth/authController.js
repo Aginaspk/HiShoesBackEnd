@@ -20,7 +20,7 @@ import customError from "../../utils/customError.js";
 // };
 
 const createAdminToken = (id) => {
-  return jwt.sign({ id, isAdmin: true }, process.env.JWT_TOEKN_ADMIN, {
+  return jwt.sign({ id, isAdmin: true }, process.env.JWT_TOKEN_ADMIN, {
     expiresIn: "7d",
   });
 };
@@ -34,7 +34,7 @@ const createUserToken = (id) => {
 
 // Function to create Admin Refresh Token
 const createAdminRefreshToken = (id) => {
-  return jwt.sign({ id, isAdmin: true }, process.env.JWT_TOEKN_ADMIN, {
+  return jwt.sign({ id, isAdmin: true }, process.env.JWT_TOKEN_ADMIN, {
     expiresIn: "14d",
   });
 };
@@ -130,8 +130,18 @@ const userLogin = async (req, res, next) => {
   });
 };
 
+//
+
+
+
+
+
+
+
+
 const adminLogin = async (req, res, next) => {
   const { value, error } = joiUserLogin.validate(req.body);
+
   if (error) {
     return res.status(400).json({
       status: "error",
@@ -140,29 +150,73 @@ const adminLogin = async (req, res, next) => {
   }
 
   const { email, password } = value;
+
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: true, 
+    sameSite: "none", 
+  });
+
+  res.clearCookie("refreshtoken", {
+    httpOnly: true,
+    secure: true, 
+    sameSite: "none", 
+  });
+
   const adminData = await user.findOne({ email, isAdmin: true });
+
   if (!adminData) {
-    return next(new customError("admin not found or unotherised", 404));
+    return next(new customError("Admin not found or unauthorized", 404));
   }
 
   const isMatch = await bycrypt.compare(password, adminData.password);
-  if (!isMatch) {
-    return next(new customError("password is incorrect", 401));
-  }
-  const token = createUserToken(adminData._id);
-  const refreshtoken = createUserRefreshToken(adminData._id);
 
-  // res.cookies("refreshtoken", refreshtoken, {
-  //   httpOnly: true,
-  //   secure: true,
-  //   sameSite: "none",
-  //   maxAge: 7 * 24 * 60 * 60 * 1000,
-  // });
+  if (!isMatch) {
+    return next(new customError("Password is incorrect", 401));
+  }
+
+  const token = createAdminToken(adminData._id);
+  const refreshtoken = createAdminRefreshToken(adminData._id);
+
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: true,
+    maxAge: 15 * 60 * 1000,
+  });
+
+  res.cookie("refreshToken", refreshtoken, {
+    httpOnly: true,
+    secure: true, 
+    sameSite: "none", 
+    maxAge: 7 * 24 * 60 * 60 * 1000, 
+  });
+
   res.status(200).json({
-    message: "admin loggedIn successfully",
+    message: "Admin logged in successfully",
     token,
   });
 };
+
+const adminLogout = async (req, res, next) => {
+  try {
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    });
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    });
+
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 
 const userLogout = async (req, res, next) => {
   try {
@@ -184,5 +238,4 @@ const userLogout = async (req, res, next) => {
   }
 };
 
-
-export { userReg, userLogin, adminLogin, userLogout };
+export { userReg, userLogin, adminLogin, userLogout,adminLogout };
