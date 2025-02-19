@@ -73,21 +73,43 @@ const verifyToken = (req, res, next) => {
 };
 
 
+// const veridyAdminToken = (req, res, next) => {
+//   try {
+//     if (!req.user) {
+//       return next(new customError("Auth failed", 401));
+//     }
+
+//     if (!req.user.isAdmin) {
+//       return next(new customError("Access denied", 403));
+//     }
+
+//     next();
+//   } catch (error) {
+//     console.log("Admin verifiacton Error", error.message);
+//     next(new customError("failed to verify admin", 500));
+//   }
+// };
+
+
 const veridyAdminToken = (req, res, next) => {
   try {
-    if (!req.user) {
-      return next(new customError("Auth failed", 401));
+    const token = req.cookies?.token; 
+
+    if (!token) {
+      return next(new customError("Authentication token missing", 401));
     }
 
-    if (!req.user.isAdmin) {
-      return next(new customError("Access denied", 403));
-    }
-
-    next();
+    jwt.verify(token, process.env.JWT_TOKEN_ADMIN, (err, decoded) => {
+      if (err) {
+        console.error("JWT verification error:", err.message);
+        return next(new customError("Invalid or expired token", 403));
+      }
+      req.user = decoded;
+      next();
+    });
   } catch (error) {
-    console.log("Admin verifiacton Error", error.message);
-    next(new customError("failed to verify admin", 500));
+    console.error("Token verification error:", error.message);
+    next(new customError("Failed to verify token", 500));
   }
 };
-
 export { verifyToken, veridyAdminToken };

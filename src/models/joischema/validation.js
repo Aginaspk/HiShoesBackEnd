@@ -21,14 +21,14 @@ const joiUserLogin = joi.object({
 });
 
 const joiProductSchema = joi.object({
-  name: joi.string().trim().required(),
-  description: joi.string().trim().required(),
-  price: joi.number().required(),
-  sale: joi.number().required(),
-  brand: joi.string().trim().required(),
-  sizes: joi.string().trim().required(),
-  gender: joi.string().trim().required(), // Corrected "trm" to "trim"
-  sold: joi.number().required(),
+  name: joi.string().trim().optional(),
+  description: joi.string().trim().optional(),
+  price: joi.number().optional(),
+  sale: joi.number().optional(),
+  brand: joi.string().trim().optional(),
+  sizes: joi.string().trim().optional(),
+  gender: joi.string().trim().optional(), // Corrected "trm" to "trim"
+  sold: joi.number().optional(),
   isDeleted:joi.boolean().default(false).optional(),
 
 });
