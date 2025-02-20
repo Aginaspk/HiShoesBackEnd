@@ -1,10 +1,13 @@
 import orderShema from "../../models/schema/orderShema.js";
+import productSchema from "../../models/schema/productSchema.js";
+import userSchema from "../../models/schema/userSchema.js";
 import CustomError from "../../utils/customError.js";
 
 const getAllOrders = async (req, res, next) => {
   const orders = await orderShema
     .find()
     .populate("products.productId", "name price images")
+    .populate("userId", "name email")
     .sort({ createdAt: -1 });
 
   if (!orders) {
@@ -67,6 +70,9 @@ const updatePaymentStatus = async (req, res, next) => {
 };
 
 const getStatus = async (req, res, next) => {
+
+  const noOfProducts = await productSchema.countDocuments();
+  const noOfUsers = await userSchema.countDocuments({isAdmin:false})
   const toatlStatus = await orderShema.aggregate([
     { $match: { shippingStatus: { $ne: "cancelled" } } },
     { $unwind: "$products" },
@@ -88,6 +94,8 @@ const getStatus = async (req, res, next) => {
       totalRevenue: toatlStatus[0].totalRevenue,
       toatalSales: toatlStatus[0].toatalSales,
       totalProductsSold: toatlStatus[0].totalProductsSold,
+      noOfProducts,
+      noOfUsers,
     },
   });
 };

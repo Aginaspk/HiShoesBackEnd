@@ -40,63 +40,136 @@ const orderCOD = async (req, res, next) => {
     .json({ message: "order placed succesfully", order: newOrder });
 };
 
+// const orderWithStripe = async (req, res, next) => {
+//   const { products, totalAmount } = req.body;
+//   if (!products || products.length === 0) {
+//     return next(new CustomError("No products found", 404));
+//   }
+//   const productDetails = await Promise.all(
+//     products.map(async (item) => {
+//       const product = await productSchema.findById(item.productId);
+//       if (!product) {
+//         return next(new CustomError("product not found", 404));
+//       }
+//       return {
+//         name: product.name,
+//         price: product.price,
+//         images: product.images,
+//         quantity: item.quantity,
+//       };
+//     })
+//   );
+//   const newTotal = Math.round(totalAmount);
+
+//   const lineItem = productDetails.map((item) => ({
+//     price_data: {
+//       currency: "usd",
+//       product_data: {
+//         name: item.name,
+//         images: item.images,
+//       },
+//       unit_amount: Math.round(item.price * 100),
+//     },
+//     quantity: item.quantity,
+//   }));
+
+//   const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY);
+//   const session = await stripeClient.checkout.sessions.create({
+//     payment_method_types: ["card"],
+//     line_items: lineItem,
+//     mode: "payment",
+//     success_url: `http://localhost:3000/success/{CHECKOUT_SESSION_ID}`,
+//     cancel_url: `http://localhost:3000/cancel`,
+//   });
+//   const newOrder = new orderShema({
+//     userId: req.user.id,
+//     products,
+//     totalAmount: newTotal,
+//     paymentStatus: "pending",
+//     shippingStatus: "processing",
+//     paymentMethod: "stripe",
+//     sessionId: session.id,
+//   });
+//   await newOrder.save();
+
+//   res.status(200).json({
+//     message: "order placed succesfully",
+//     sessionId: session.id,
+//     stripeURL: session.url,
+//   });
+// };
+
 const orderWithStripe = async (req, res, next) => {
-  const { products, totalAmount } = req.body;
-  if (!products || products.length === 0) {
-    return next(new CustomError("No products found", 404));
-  }
-  const productDetails = await Promise.all(
-    products.map(async (item) => {
-      const product = await productSchema.findById(item.productId);
-      if (!product) {
-        return next(new CustomError("product not found", 404));
+  try {
+    const userId = req.user.id;
+    const cart = await cartSchema
+      .findOne({ userId })
+      .populate("products.productId");
+
+    if (!cart || cart.products.length === 0) {
+      return next(new CustomError("Cart is empty", 404));
+    }
+
+    const productDetails = cart.products.map((item) => {
+      if (!item.productId) {
+        return next(new CustomError("Product not found", 404));
       }
       return {
-        name: product.name,
-        price: product.price,
-        images: product.images,
+        name: item.productId.name,
+        price: item.productId.price,
+        images: item.productId.images,
         quantity: item.quantity,
+        size: item.size,
       };
-    })
-  );
-  const newTotal = Math.round(totalAmount);
+    });
 
-  const lineItem = productDetails.map((item) => ({
-    price_data: {
-      currency: "inr",
-      product_data: {
-        name: item.name,
-        images: item.images,
+    let newTotal = 0;
+    cart.products.forEach((item) => {
+      item.totalPrice = item.productId.price * item.quantity;
+      newTotal += item.totalPrice;
+    });
+
+    const lineItem = productDetails.map((item) => ({
+      price_data: {
+        currency: "usd",
+        product_data: {
+          name: item.name,
+          images: item.images,
+          metadata: { size: item.size },
+        },
+        unit_amount: Math.round(item.price * 100),
       },
-      unit_amount: Math.round(item.price * 100),
-    },
-    quantity: item.quantity,
-  }));
+      quantity: item.quantity,
+    }));
 
-  const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY);
-  const session = await stripeClient.checkout.sessions.create({
-    payment_method_types: ["card"],
-    line_items: lineItem,
-    mode: "payment",
-    success_url: `http://localhost:3000/success/{CHECKOUT_SESSION_ID}`,
-    cancel_url: `http://localhost:3000/cancel`,
-  });
-  const newOrder = new orderShema({
-    userId: req.user.id,
-    products,
-    totalAmount: newTotal,
-    paymentStatus: "pending",
-    shippingStatus: "processing",
-    paymentMethod: "stripe",
-    sessionId: session.id,
-  });
-  await newOrder.save();
+    const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY);
+    const session = await stripeClient.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: lineItem,
+      mode: "payment",
+      success_url: `http://localhost:5173/success/{CHECKOUT_SESSION_ID}`,
+      cancel_url: `http://localhost:5173/cancel`,
+    });
 
-  res.status(200).json({
-    message: "order placed succesfully",
-    sessionId: session.id,
-    stripeURL: session.url,
-  });
+    const newOrder = new orderShema({
+      userId,
+      products: cart.products,
+      totalAmount: newTotal || 0,
+      paymentStatus: "pending",
+      shippingStatus: "processing",
+      paymentMethod: "stripe",
+      sessionId: session.id,
+    });
+    await newOrder.save();
+
+    res.status(200).json({
+      message: "Order placed successfully",
+      sessionId: session.id,
+      stripeURL: session.url,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 const stripeSuccess = async (req, res, next) => {
@@ -157,4 +230,10 @@ const cancelOrderById = async (req, res, next) => {
   });
 };
 
-export { orderCOD, getAllOrders, cancelOrderById, orderWithStripe,stripeSuccess };
+export {
+  orderCOD,
+  getAllOrders,
+  cancelOrderById,
+  orderWithStripe,
+  stripeSuccess,
+};

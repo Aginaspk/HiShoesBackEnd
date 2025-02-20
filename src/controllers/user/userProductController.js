@@ -1,7 +1,7 @@
 import products from "../../models/schema/productSchema.js";
 
 const getAllProducts = async (req, res) => {
-  const allProducts = await products.find();
+  const allProducts = await products.find({ isDeleted: false });
 
   res.status(200).json({
     status: "success",
@@ -45,11 +45,17 @@ const getProductsWithCategory = async (req, res) => {
   const { category } = req.params;
   let productsByCategory = [];
   if (category === "sale") {
-    productsByCategory = await products.find({ sale: { $gt: 0 } });
+    productsByCategory = await products.find(
+      { sale: { $gt: 0 } },
+      { isDeleted: false }
+    );
   } else if (category === "all") {
-    productsByCategory = await products.find();
+    productsByCategory = await products.find({ isDeleted: false });
   } else {
-    productsByCategory = await products.find({ gender: category });
+    productsByCategory = await products.find(
+      { gender: category },
+      { isDeleted: false }
+    );
   }
 
   res.status(200).json({
